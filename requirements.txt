@@ -1,4 +1,6 @@
-websockets >= 8.0.2
+websockets >= 8.1
 cloudgenix >= 5.2.1b1
 fuzzywuzzy >= 0.17.0
-pyyaml >= 3.13
+pyyaml >= 5.1.2
+tabulate >= 0.8.5
+cryptography >= 2.8
