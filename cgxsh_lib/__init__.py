@@ -329,7 +329,7 @@ def kill_print_toolkitsession(sdk, line_filter=None):
     cgxsh_logger.debug(f"INDEXES: {indexes} ")
     # loop for input on what to kill.
     while not valid:
-        sys.stdout.write("\nEnter Index to remove (range for multiple (eg. 1,3,5-10), or x to exit: ")
+        sys.stdout.write("\nEnter Index to remove, range for multiple (eg. 1,3,5-10), or x to exit: ")
         sys.stdout.flush()
         choice = input()
 
