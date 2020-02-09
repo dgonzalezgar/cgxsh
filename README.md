@@ -547,8 +547,3 @@ cgxsh_decrypt_config:
                         decrypt contents into, since config may be corrupt.
                         Valid password is still required.
 ```
-
-#### Version
-| Version | Build | Changes |
-| ------- | ----- | ------- |
-| **1.0.0** | **b1** | Initial Release. |
