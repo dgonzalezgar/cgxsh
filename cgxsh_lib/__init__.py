@@ -3,7 +3,7 @@
 # Meant to perform similarly to Secure Shell (ssh), but via cloud service and in python.
 #
 
-__version__ = "1.0.0b1"
+__version__ = "1.0.1b1"
 __author__ = "Aaron Edwards <cgxsh@ebob9.com>"
 __email__ = "cgxsh@ebob9.com"
 
@@ -1215,7 +1215,7 @@ def cgx_sdk_login(args):
         cgxsh_logger.debug(f"Loaded Device Password from commandline argument: "
                            f"<Sensitive value hidden>")
         return_password = args['device_password']
-    if esp_loaded_device_password is not None:
+    elif esp_loaded_device_password is not None:
         cgxsh_logger.debug(f"Loaded Device Password from ESP section config '{loaded_client_config_value}': "
                            f"<Sensitive value hidden>")
         return_password = esp_loaded_device_password
@@ -1484,6 +1484,7 @@ async def toolkit_worker(loop, input_queue, stop_future, pause_queue, element_id
     deny_interactive = True if commands and not noexit else False
     cgxsh_logger.debug(f"Deny Interactive Input Flag: {deny_interactive}")
     if len(commands) > 0 and deny_interactive:
+        print_during_input(f"COMMAND MODE: Interactive input will be disabled.")
         # Send exit command at end of commands.
         commands.append('exit')
 

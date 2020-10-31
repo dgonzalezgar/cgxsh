@@ -99,6 +99,7 @@ MIT
 #### Version
 | Version | Build | Changes |
 | ------- | ----- | ------- |
+| **1.0.1** | **b1** | Fix for Github issues #1 and #2 |
 | **1.0.0** | **b1** | Initial Release |
 | **0.0.1** | **b1** | Placeholder for future release. |
 

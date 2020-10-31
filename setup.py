@@ -9,7 +9,7 @@ if sys.version_info[:3] < (3, 6, 1):
 
 
 setup(name='cgxsh',
-      version='1.0.0b1',
+      version='1.0.1b1',
       description='Command-line access to the controller-based CloudGenix ION Troubleshooting Toolkit.',
       long_description=long_description,
       long_description_content_type='text/markdown',
