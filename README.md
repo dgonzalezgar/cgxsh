@@ -9,6 +9,12 @@
 
 Command-line access to the controller-based CloudGenix ION Troubleshooting Toolkit.
 
+#### WARNING
+As of 6/2023, Using username/password for controller login is DEPRECATED. This method has not been removed from `cgxsh` as of version 1.0.2b1. This may still function for specific legacy customers/accounts. 
+
+Please switch to AUTH_TOKEN controller login as soon as possible. 
+A future update will add support for Prisma SASE TSG/Service Accounts, which will be the recommended authentication mode for future use.
+
 #### Synopsis
 The `cgxsh` application is designed to allow a CloudGenix customer to replace a lot of the device-specific troubleshooting 
 traditionally performed via SSH with a cloud-based connectivity model.
@@ -19,7 +25,7 @@ This utility should support Windows (Win 10 or higher) and Mac/Linux systems.
 
 #### Requirements
 * Active CloudGenix Account
-* Python >=3.6
+* Python >=3.10
 * CloudGenix IONs running 5.2.1+ Software
 * Python modules:
     * cloudgenix   - <https://github.com/CloudGenix/sdk-python>
@@ -97,11 +103,12 @@ This utility should support Windows (Win 10 or higher) and Mac/Linux systems.
 MIT
 
 #### Version
-| Version | Build | Changes |
-| ------- | ----- | ------- |
-| **1.0.1** | **b1** | Fix for Github issues #1 and #2 |
-| **1.0.0** | **b1** | Initial Release |
-| **0.0.1** | **b1** | Placeholder for future release. |
+| Version | Build | Changes                                                      |
+| ------- | ----- |--------------------------------------------------------------|
+| **1.0.2** | **b1** | Support for Python 3.10+, Websockets 12.0+ (Github issue #3) |
+| **1.0.1** | **b1** | Fix for Github issues #1 and #2                              |
+| **1.0.0** | **b1** | Initial Release                                              |
+| **0.0.1** | **b1** | Placeholder for future release.                              |
 
 #### (Optional) Environment Variables
 * `AUTH_TOKEN` or `X_AUTH_TOKEN`: CloudGenix Controller Authentication Token (overrides configuration files)

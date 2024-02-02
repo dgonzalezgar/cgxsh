@@ -3,7 +3,7 @@
 # Meant to perform similarly to Secure Shell (ssh), but via cloud service and in python.
 #
 
-__version__ = "1.0.1b1"
+__version__ = "1.0.2b1"
 __author__ = "Aaron Edwards <cgxsh@ebob9.com>"
 __email__ = "cgxsh@ebob9.com"
 
@@ -31,6 +31,7 @@ from .file_crypto import check_get_file, read_encrypted_file, write_encrypted_fi
 import cloudgenix
 from cloudgenix import websockets
 from websockets.__main__ import print_during_input, print_over_input
+from websockets.frames import Close as format_close
 
 # Set logging basics
 cgxsh_logger = logging.getLogger(__name__)
@@ -1097,6 +1098,13 @@ def cgx_sdk_login(args):
     else:
         cgxsh_logger.debug(f"Logging in to controller with email/password. Email from: {controller_email_from},"
                            f" Password from: {controller_password_from}.")
+        # Controller user/password is deprecated as of move to Palo Alto SASE/Strata Cloud Manager/TSG.
+        # Warn users here - some accounts this still will function, but new users can't use.
+        cgxsh_logger.warning(f"WARNING: Using username/password for controller login is DEPRECATED. This may still "
+                             f"function for specific legacy customers/accounts. Please switch to AUTH_TOKEN login "
+                             f"as soon as possible. A future update will add support for Prisma SASE "
+                             f"TSG/Service Accounts, which will be the recommended authentication mode in the future.")
+
         retry = 0
         while sdk.tenant_id is None and retry < 3:
             sdk.interactive.login(controller_email, controller_password, client_login=False)
@@ -1434,7 +1442,7 @@ async def generic_worker(loop, input_queue, stop_future, sdk, pretty_print=True,
         # destroy the queues
         del input_queue
         await websocket.close()
-        close_details = websockets.exceptions.format_close(websocket.close_code, websocket.close_reason)
+        close_details = str(format_close(websocket.close_code, websocket.close_reason))
 
         if CGXSH_VERBOSITY_LEVEL == 0:
             print_over_input(f"Connection closed.")
@@ -1703,7 +1711,7 @@ async def toolkit_worker(loop, input_queue, stop_future, pause_queue, element_id
         del input_queue
         del pause_queue
         await websocket.close()
-        close_details = websockets.exceptions.format_close(websocket.close_code, websocket.close_reason)
+        close_details = str(format_close(websocket.close_code, websocket.close_reason))
 
         if CGXSH_VERBOSITY_LEVEL == 0:
             print_over_input(f"Connection closed.")
@@ -1799,7 +1807,7 @@ def generic_client():
     loop = asyncio.new_event_loop()
 
     # Input asyncio queue
-    input_queue = asyncio.Queue(loop=loop)
+    input_queue = asyncio.Queue()
 
     # asyncio.Future callback for sending/killing the background thread, and sending a SIGINT or SIGTERM to the main
     # thread
@@ -1807,8 +1815,7 @@ def generic_client():
 
     # Add the worker to the main loop - this will be launched in the background thread.
     asyncio.ensure_future(generic_worker(loop, input_queue, stop, sdk, pretty_print=args['no_format'],
-                                         show_keepalives=args['show_keepalives']),
-                          loop=loop)
+                                         show_keepalives=args['show_keepalives']),loop=loop)
 
     # Start the loop in the background thread.
     thread = threading.Thread(target=loop.run_forever)
@@ -1945,14 +1952,14 @@ def toolkit_client():
     loop = asyncio.new_event_loop()
 
     # Input asyncio queue
-    input_queue = asyncio.Queue(loop=loop)
+    input_queue = asyncio.Queue()
 
     # asyncio.Future callback for sending/killing the background thread, and sending a SIGINT or SIGTERM to the main
     # thread
     stop = loop.create_future()
 
     # Create a pause queue to tell the background thread to stop processing the websocket temporarily.
-    pause_queue = asyncio.Queue(loop=loop)
+    pause_queue = asyncio.Queue()
 
     # Add the worker to the main loop - this will be launched in the background thread.
     asyncio.ensure_future(toolkit_worker(loop, input_queue, stop, pause_queue, element_id, sdk,
