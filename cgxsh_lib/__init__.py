@@ -45,6 +45,7 @@ ESCAPE_CHAR = '\N{INFORMATION SEPARATOR THREE}'
 
 ELEMENTS_ID2N = {}
 ELEMENTS_N2ID = {}
+ELEMENTS_S2ID = {}
 CLIENT_N2ID = {}
 CLIENT_CANONICAL_N2ID = {}
 CLIENT_ID2R = {}
@@ -729,6 +730,13 @@ def pick_element(element_str, sdk):
     # update cache
     update_elements_cache(sdk)
 
+    # Check for Exact Serial Number Match
+    if element_str in ELEMENTS_S2ID:
+        host_id = ELEMENTS_S2ID[element_str]
+        host_name = ELEMENTS_ID2N.get(host_id, "Unknown Name")
+        sys.stdout.write(f"Found Serial Number match: {host_name} ({element_str}).\n")
+        return host_id
+
     name_list = [name for name in ELEMENTS_N2ID.keys()]
     id_list = [idnum for idnum in ELEMENTS_ID2N.keys()]
 
@@ -1260,6 +1268,7 @@ def update_elements_cache(sdk):
     """
     global ELEMENTS_ID2N
     global ELEMENTS_N2ID
+    global ELEMENTS_S2ID
 
     elem_resp = sdk.get.elements()
 
@@ -1270,7 +1279,8 @@ def update_elements_cache(sdk):
 
     ELEMENTS_N2ID = sdk.build_lookup_dict(elem_items)
     ELEMENTS_ID2N = sdk.build_lookup_dict(elem_items, key_val='id', value_val='name')
-
+    # Map Serial Numbers to IDs
+    ELEMENTS_S2ID = sdk.build_lookup_dict(elem_items, key_val='serial_number', value_val='id')
 
 def update_operators_cache(sdk):
     """
