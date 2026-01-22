@@ -42,7 +42,8 @@ This utility should support Windows (Win 10 or higher) and Mac/Linux systems.
 
 ##### cgxsh
 * SSH-replacement console utility using CloudGenix Cloud Controller
-* Simple commandline use: `cgxsh "Portland ION"`
+* Simple commandline use with device name: `cgxsh "Portland ION"`
+* Simple commandline use with serial number: `cgx 20-036775-6221`
 * Interactive session by default, but specific commands and exit support too: `cgxsh "Portland ION" "set paging off" "dump lldp all"`
 * Multi-tenant ESP/MSP support: `cgxsh "Device_name"@"Tenant_Name"`
 * Configuration file with Multi-tenant support and optional Encryption to store credential(s)
@@ -59,6 +60,12 @@ This utility should support Windows (Win 10 or higher) and Mac/Linux systems.
       7) MAN-3K-1, (36%)
     Select a number, or any other key to exit: 1
     ```
+* Serial Number access:'
+  ```shell script
+  root@dgonzalezgar:~# cgxsh-lab 4221adbb-2711-7c2b-9712-77826a4a188f
+  Found Serial Number match: Branch2_DanielGonzalez_01 (4221adbb-2711-7c2b-9712-77826a4a188f).
+  Connected to 1680621797229002608.
+  ```
 * Escape command menu for operations while connected: 
     ```text
     Portland Sales Office ION#  
