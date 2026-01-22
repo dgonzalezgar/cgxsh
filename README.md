@@ -62,7 +62,7 @@ This utility should support Windows (Win 10 or higher) and Mac/Linux systems.
     ```
 * Serial Number access:'
   ```shell script
-  root@dgonzalezgar:~# cgxsh-lab 4221adbb-2711-7c2b-9712-77826a4a188f
+  root@dgonzalezgar:~# cgxsh 4221adbb-2711-7c2b-9712-77826a4a188f
   Found Serial Number match: Branch2_DanielGonzalez_01 (4221adbb-2711-7c2b-9712-77826a4a188f).
   Connected to 1680621797229002608.
   ```
