@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGX Web Shell</title>
+    <link rel="stylesheet" href="/static/xterm.css" />
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; }
+        
+        /* --- Launcher UI --- */
+        #launcher {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #1e1e1e;
+        }
+        
+        h1 { font-weight: 300; letter-spacing: 2px; margin-bottom: 30px; }
+
+        .input-group { margin-bottom: 15px; width: 320px; }
+        .input-group label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
+        
+        input { 
+            width: 100%; padding: 10px; font-size: 14px; 
+            border: 1px solid #444; background: #252526; color: white; border-radius: 4px; outline: none; box-sizing: border-box;
+        }
+        input:focus { border-color: #007acc; }
+        
+        button { 
+            width: 100%; padding: 12px; font-size: 16px; margin-top: 10px;
+            cursor: pointer; background: #007acc; color: white; border: none; border-radius: 4px; transition: background 0.2s; 
+        }
+        button:hover { background: #005a9e; }
+
+        /* --- Terminal UI --- */
+        #terminal-container { display: none; height: 100%; width: 100%; }
+
+        /* --- Status Overlay --- */
+        #status-overlay {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 30px; background: rgba(30, 30, 30, 0.9); border: 1px solid #555; border-radius: 8px;
+            text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="launcher">
+        <h1>CGX SHELL</h1>
+        
+        <div class="input-group">
+            <label>Target Element / Serial</label>
+            <input type="text" id="targetInput" placeholder="e.g. router-01" autocomplete="off" autofocus>
+        </div>
+
+        <div class="input-group">
+            <label>Auth Token (CloudGenix)</label>
+            <input type="password" id="tokenInput" placeholder="Paste token here..." autocomplete="current-password">
+        </div>
+
+        <div class="input-group" style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="saveToken" style="width: auto;" checked>
+            <span style="font-size: 12px; color: #aaa;">Remember Token in Browser</span>
+        </div>
+
+        <div class="input-group">
+            <button onclick="startSession()">Connect</button>
+        </div>
+    </div>
+
+    <div id="terminal-container"></div>
+    
+    <div id="status-overlay">
+        <h3 id="status-title">Session Ended</h3>
+        <p id="status-msg" style="color: #ccc; margin-bottom: 20px;">Connection closed.</p>
+        <button onclick="resetToLauncher()" style="width: auto; padding: 10px 30px;">Back to Launcher</button>
+    </div>
+
+    <script src="/static/xterm.js"></script>
+    <script src="/static/xterm-addon-fit.js"></script>
+
+    <script>
+        let term, ws;
+
+        // On Load: Check if we have a saved token
+        window.onload = function() {
+            const savedToken = localStorage.getItem("cgx_auth_token");
+            if (savedToken) {
+                document.getElementById("tokenInput").value = savedToken;
+            }
+        }
+
+        function resetToLauncher() {
+            // Simply reload the page to clean up xterm and sockets completely
+            location.reload();
+        }
+
+        function startSession() {
+            const target = document.getElementById('targetInput').value.trim();
+            const token = document.getElementById('tokenInput').value.trim();
+            const saveToken = document.getElementById('saveToken').checked;
+
+            if (!target || !token) {
+                alert("Both Target and Auth Token are required.");
+                return;
+            }
+
+            // Save or Clear Token
+            if (saveToken) {
+                localStorage.setItem("cgx_auth_token", token);
+            } else {
+                localStorage.removeItem("cgx_auth_token");
+            }
+
+            // UI Switch
+            document.getElementById('launcher').style.display = 'none';
+            document.getElementById('terminal-container').style.display = 'block';
+
+            // Init Terminal
+            term = new Terminal({
+                cursorBlink: true,
+                macOptionIsMeta: true,
+                fontFamily: 'Consolas, monospace',
+                fontSize: 14
+            });
+            const fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            term.open(document.getElementById('terminal-container'));
+            fitAddon.fit();
+
+            // Handle CTRL+] for Menu (0x1D)
+            term.attachCustomKeyEventHandler((e) => {
+                if (e.ctrlKey && e.key === ']') {
+                    if (e.type === 'keydown' && ws.readyState === WebSocket.OPEN) ws.send('\x1d');
+                    return false;
+                }
+                return true;
+            });
+
+            // Connect with Token in URL
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const wsUrl = `${protocol}://${window.location.host}/ws?target=${encodeURIComponent(target)}&token=${encodeURIComponent(token)}`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ cols: term.cols, rows: term.rows }));
+                term.focus();
+            };
+
+            ws.onmessage = e => term.write(e.data);
+            
+            term.onData(data => {
+                if (ws.readyState === WebSocket.OPEN) ws.send(data);
+            });
+
+            window.addEventListener('resize', () => {
+                fitAddon.fit();
+                if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ cols: term.cols, rows: term.rows }));
+            });
+
+            ws.onclose = (e) => {
+                document.getElementById('status-overlay').style.display = 'block';
+            };
+            
+            ws.onerror = () => {
+                document.getElementById('status-overlay').style.display = 'block';
+                document.getElementById('status-title').innerText = "Connection Error";
+                document.getElementById('status-msg').innerText = "Could not connect to backend.";
+            };
+        }
+
+        // Allow Enter key to submit
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && document.getElementById('launcher').style.display !== 'none') {
+                startSession();
+            }
+        });
+    </script>
+</body>
+</html>
