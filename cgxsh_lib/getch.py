@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import os
+import select
 import sys
 import locale
 
@@ -82,7 +84,7 @@ class _GetchUnix:
     def _do_getch(self):
         """
         Do actual POSIX char obtaining
-        :return: char
+        :return: char (or multiple chars if paste/rapid input)
         """
         fd = sys.stdin.fileno()
         old_settings = self.termios.tcgetattr(fd)
@@ -93,10 +95,15 @@ class _GetchUnix:
             # self.tty.setcbreak(sys.stdin.fileno())
             # Custom TTY mode it is!
             self.custom_tty_mode(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
+            # Block until at least 1 byte is available, then drain all buffered bytes at once.
+            # This handles paste correctly: all pasted chars arrive together and are read in one
+            # shot instead of one-at-a-time with repeated TTY mode toggles that can lose chars.
+            data = os.read(fd, 1)
+            while select.select([fd], [], [], 0)[0]:
+                data += os.read(fd, 4096)
         finally:
             self.termios.tcsetattr(fd, self.termios.TCSADRAIN, old_settings)
-        return ch
+        return data.decode(self.final_encoding, errors='replace')
 
 
 class _GetchWindows:
