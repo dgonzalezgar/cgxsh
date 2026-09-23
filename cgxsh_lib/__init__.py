@@ -1132,7 +1132,7 @@ def cgx_sdk_login(args):
     # parse element @ client (ESP/msp) string
     element_string = args['element[@client]']
     element_client = element_string.rsplit('@', 1)
-    if len(element_client) is 1:
+    if len(element_client) == 1:
         # just element
         element = element_client[0]
         client = None
